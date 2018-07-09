@@ -1,0 +1,240 @@
+系统层安全维护：
+ 	一、系统层账户清单
+	二、账户口令维护
+		1.账户维护策略
+			进行严格的账户管理，实施严格的账户策略。
+			严格控制增加、修改、删除系统中的账户、群组。
+			删除所有系统上不使用的账户。
+			管理员创建账户时，需要明确权限和职责、操作建议。
+			管理员代行root权限时，需要先自行登录再通过su切换到root账户。
+			采用sha512对系统口令进行加密。
+		2.创建账户
+				在遵从最小账户原则的基础上，管理员可根据需要创建账户。使用系统命令useradd来创建新的账户。
+				说明： 
+				仅root用户可以创建和删除账户。
+				操作说明
+				useradd [-u UID] [-g GID] [-d HOME] [-mM] [-s shell] username [-p PASSSWORD]相关参数说明请参见表1。
+				创建账户参数说明 
+				-u 直接给予一个UID。
+				-g 直接给予一个GID。
+				-d 直接将该用户的根目录指向已经存在的目录（系统不会再建立）。
+				-m 新建该用户的根目录，并将/etc/skel中的文件复制到用户根目录。 
+				-M 不建立用户的根目录。
+				-s 定义其使用的shell。
+				-p 设置用户的密码。
+				 注意： 
+				创建账户时，若使用-p参数设置密码，使用history命令可以查看到该账户设置的明文密码，导致账户口令泄露
+				，因此不建议使用-p参数。设置、修改口令请使用passwd命令，具体请参照修改口令。
+				操作举例
+				创建一个账户名称为test的普通用户。
+				useradd test创建一个普通账户，其根目录为home/test。 useradd -d /home/test test
+		3.删除账户
+				userdel [-r] account 
+				参数 参数说明
+				-r 删除该用户目录下的所有目录。
+		4.设置账户的有效期
+		操作说明
+			chage [-m mindays] [-M maxdays] [-d lastday] [-I inactive] [-E expiredate] [-W warndays] user
+			参数 参数说明
+			-m 口令可更改的最小天数。为零时代表任何时候都可以更改口令。
+			-M 口令保持有效的最大天数。为-1时可删除这项口令的检测。
+			-d 上一次更改的日期。
+			-I 列出当前的设置。由非特权用户来确定他们的口令或账户何时过期。
+			-E 账户到期的日期。过了这天，此账户将不可用。
+			-W 用户口令到期前，提前收到警告信息的天数。
+			对于超过期限的用户，应该检查是否允许继续使用，如果不使用则应该将这些用户删除，防止用户被非授权使用，
+			删除账户请参考删除账户小节
+		5.变更账户权限
+		操作说明
+			groupmems -g group [-a|-d] user相关参数说明请参见表1。
+				-g 指定群组名称。
+				-a 将指定账户加到指定群组。
+				-d 将指定账户加从指定群组中移除。
+			操作举例：将用户test增加到特权组root。groupmems -g root -a test
+		6.锁定账户
+		管理员可锁定暂时不使用的账户，之后根据实际情况再进行解锁。通过系统命令passwd或usermod来锁定账户。
+		操作说明
+			锁定账户可使用如下命令：
+			passwd -l user 或
+			usermod -L user
+			操作举例：锁定test账户。passwd -l test
+		7.解锁账户
+		操作说明
+			解锁账户可使用如下命令：
+			passwd -u user 或
+			usermod -U user
+		8.修改口令
+		操作说明
+			passwd [-g] [name]
+			-g：表示修改指定群组的口令
+		9.监控账户操作
+		管理员需要定期检查各个账户的操作，包括账户是否操作异常或者非法操作。
+		操作说明
+		打开账户根目录下的“.bash_history([home]/.bash_history)”文件，查看账户的操作历史，确认是否存在非法或异常操作。
+		10.检查账户
+		打开文件/etc/passwd，比较文件中的账户与主机账户清单描述的账户是否一致。若不一致，建议查出多余账户存在的原因，若无故增加，则应删除。
+		检查系统账户是否可登录，即账户的shell是否为/sbin/nologin（/etc/passwd文件每行最后一个字段值）；若不是，则应改为/sbin/nologin
+		11.系统口令加密算法维护
+		管理员可以对系统的口令加密算法进行定期检查，查看当前系统的加密算法是否与设定的算法一致。默认情况下的加密算法是sha512。
+		操作说明：要确认账户root的口令加密算法，打开/etc/pam.d/password-auth和/etc/pam.d/system-auth文件，
+		查看password sufficient pam_unix.so后的参数中的口令加密算法为sha512。
+		到口令加密算法中找到sha512对应的识别码是6。
+		打开/etc/shadow文件，发现root账户第二字段起始字符为“$6$”，说明与设定的算法一致。
+	三、系统安全维护：
+		1.服务维护策略
+			管理建议
+				最小服务和组件。
+				区分服务器的用途和角色，尽量避免安装不必要的服务和组件。
+				关闭未使用的服务。
+				服务内部组件也应采用上述原则进行裁减。
+		2.检查进程
+		管理员进行安全维护时，需要检查是否有多余的进程，及时发现不合理的进程并处理，避免风险。
+			操作说明
+			用系统命令“ps -aux”查看系统当前所有进程。
+			查看是否有多余进程（根据用户安装的组件不同，运行的进程有差异，具体由用户根据实际情况甄别）。
+			若发现有多余进程，则用系统命令“kill -9 PID”删除该进程。
+		3.检查服务/端口
+		管理员应检查是否有多余的服务，如果有多余服务及时停止，以避免安全风险。
+			操作说明
+			用户执行systemctl list-units --type=service命令查看系统所有服务。
+			查看是否有不需要使用的服务（根据用户安装的组件不同，开启服务有差异，具体由用户根据实际情况甄别）。
+			若存在不需要的服务，可用如下方式删除服务。
+			以rsyslog服务为例，如下操作：
+			执行systemctl stop rsyslog命令停止该服务运行。
+			执行systemctl disable rsyslog命令关闭该服务随机启动。
+			 警告： 
+			本操作前请务必先确认该服务为不需要的服务。
+		4.检查主机间通信
+		管理员应检查是否有多余的、非法的主机间通信，避免风险。
+			操作说明
+			用系统命令“netstat -an”查看当前系统中开放的所有端口。
+			参考通信矩阵中的端口列表，检查当前是否有多余开放的端口。
+			若存在多余端口，确认是否有必要开放，若无必要，则应关闭。
+  四、日志审计系统维护
+    1.日志文件列表：
+      系统管理员需要定期检查系统的日志信息
+    2.系统日志类别与等级
+      使用syslog记录系统日志。syslog能通过产生日志的类别（facility）和等级（level）对日志做分类处理，将日志写到文件或设备。它既可以记录本地日志，也可以通过网络记录另一个主机上的日志
+    3.检查系统日志
+        开启关闭系统日志
+          开启系统日志，使用命令#systemctl start rsyslog
+          关闭系统日志，使用命令：#systemctl stop rsyslog检查日志开关的状态
+        检查日志开关的状态，使用命令：
+          #systemctl status rsyslog输出为active (running)，则为开启状态。
+        输出为inactive (dead)，则为关闭状态。
+        检查日志存储空间
+          建议系统管理员定期清理/var/log/中的日志文件，备份、删除旧的日志信息，释放空间。同时应检查日志是否有防爆功能。
+     4.开启关闭审计系统
+        开启：systemctl start auditd
+            auditctl -e 1
+        关闭： systemctl stop auditd
+     5.检查审计开关的状态
+        systemctl status auditd输出为active (running)，则为开启状态。
+        输出为inactive (dead)，则为关闭状态。
+     6.定制审计策略
+        审计系统可以使用auditctl命令来动态管理审计参数和审计规则，也可以将审计规则静态的写入到/etc/audit/audit.rules文件中。
+        auditctl参数说明 参考博客：https://blog.csdn.net/newjueqi/article/details/9384981
+        链表名和规则说明
+        操作举例
+        查看所有不成功的open系统调用。
+          auditctl -a entry,always -S open -F success!=0
+        监控/etc/audit/audit.rules的变化，将以下内容加入到audit.rules中即可实现。
+          -w /etc/audit/audit.rules -k TEST_audit_rules -p rxwa
+     7.检查审计日志
+       工具ausearch用于查询审计后台的日志，它能基于不同搜索规则的时间查询审计后台日志。
+        操作说明
+        ausearch [options] 说明： 
+        options参数说明请自行查阅相关man帮助信息。参考链接：https://blog.csdn.net/qwertyupoiuytr/article/details/58278349
+        特别指出的，每个系统调用进入内核空间运行时有个唯一的事件ID，系统调用在进入内核后的运行过程的审计事件共享这个ID。也就是说，一个审计事件，可能包含几条审计记录。
+        操作举例
+        查询操作/etc/audit/rules.d/audit.rules文件的审计日志。
+          ausearch -k TEST_audit_rules
+      8.生成审计报告
+        audit审计系统使用aureport工具分析审计日志，对分析结果做出总结，并生成审计报告。
+        系统管理员可以根据维护的需要定期生成审计报告，用于分析异常的审计信息。
+        操作说明
+        aureport [options] 说明： 
+        options参数说明请自行查阅相关man帮助信息。
+        操作举例
+        报告失败事件。aureport --failed
+    五、认证与授权维护
+        1.维护PAM策略
+            本系统使用Linux-PAM实现用户的身份鉴别、口令复杂度控制、登录阈值设置等。PAM主要是由一组共享库文件（在/lib64/security/目录下）和一些配置文件（在/etc/pam.d/目录下）组成的。
+            系统管理员可以根据维护需要对PAM策略进行修改。
+          口令复杂度维护
+            系统默认的设置口令复杂度如下：
+            （1）口令长度最短应不少于6位（管理员用户至少8位）。
+            （2）口令至少包含“小写字母（a-z）、大写字母（A-Z）、数字（0-9）、特殊字符”中的3种。
+            （3）口令不能和账户或者账户的倒写一样。
+            （4）不能修改为过去5次使用过的旧口令。
+            根据维护需要，系统管理员通过修改/etc/pam.d/system-auth和/etc/pam.d/password-auth的pam_pwquality.so和pam_pwhistory.so配置来重新设置口令复杂度。
+            表1 pam_pwquality.so配置项说明 配置项说明
+            minlen=8 口令长度至少包含8个字符
+            minclass=3 口令至少包含大写字母、小写字母、数字任意两种和特殊字符中的任意3个
+            ucredit=0口令包含任意个大写字母
+            lcredit=0口令包含任意个小写字母
+            dcredit=0口令包含任意个数字
+            ocredit=0口令包含任意个特殊字符
+            retry=3每次修改最多可以尝试3次
+            enforce_for_root本设置对root用户同样有效
+            表2 pam_pwhistory.so配置项说明 配置项说明
+            remember=5口令不能修改为过去5次使用过的旧口令
+            enforce_for_root本设置对root用户同样有效
+          口令复杂度维护操作说明
+            以修改口令长度为例，操作步骤如下
+            修改/etc/pam.d/system-auth和/etc/pam.d/password-auth文件的pam_pwquality.so后的minlen字段的值，如下：
+            minlen=10口令长度至少为10位。
+            保存并退出/etc/pam.d/system-auth和/etc/pam.d/password-auth文件。
+
+          登录出错阈值维护
+            系统设置默认的登录出错阈值为3次（若连续登录出错次数超过3次，则账户被锁定5分钟）。用户锁定期间，任何输入被判定为无效，锁定时间不因用户的再次输入而刷新；解锁后，用户的错误输入记录被清空。
+            根据维护需要，系统管理员通过修改/etc/pam.d/system-auth和/etc/pam.d/password-auth的pam_faillock.so配置来重新设置登录出错阈值，pam_faillock.so配置项如下。
+            表3 pam_faillock.so配置项说明 配置项说明
+              authfail捕获用户登录失败的事件。
+              deny=3用户连续登录失败次数超过3次即被锁定。
+              unlock_time=300普通用户自动解锁时间为300秒（即5分钟）。
+              even_deny_root同样限制root用户。
+            系统管理员在登录系统后可以通过执行“faillock --user XXXX --reset”命令来清空用户登录出错的次数记录（XXXX是对应的用户名）。
+          登录出错阈值维护操作说明
+            口令输错次数记录清空操作步骤如下：
+            使用root用户登录系统。
+            执行如下命令，清空口令输错次数记录。也可以清除指定用户的错误次数记录。
+            faillock --user XXXX --reset 说明： 
+            如果root用户因为登录口令输错3次被锁定，必须等待300秒才能再次登录系统，登录成功后pam_faillock会清空root用户的登录出错信息。
+            修改出错阈值的操作步骤如下：
+            修改/etc/pam.d/system-auth和/etc/pam.d/password-auth文件的pam_faillock.so后的deny字段的值，如下：
+              deny=5设置出错阈值为5次，即连续登录出错次数超过5次后账户被锁定300秒。
+              保存并退出/etc/pam.d/system-auth和/etc/pam.d/password-auth文件。
+
+          su权限维护
+            系统默认只允许root和wheel群组的用户使用su命令，限制其他用户使用su命令。
+            根据维护需要，系统管理员可以授予、回收其他用户使用su命令的权限，操作如下：
+            查看当前具有su权限的用户。
+            cat /etc/group | grep wheel | cut -d : -f 4各用户间以“,”分隔。
+            授予su权限。
+            groupmems -g wheel -a useruser为允许使用su命令的用户。
+            回收su权限。
+            groupmems -g wheel -d user
+         2.维护SSH
+            SSH是安全shell的简写。SSH是目前较可靠，专为远程登录会话和其他网络服务提供安全性的协议。利用SSH协议可以有效防止远程管理过程中的信息泄露问题。
+            透过SSH可以对所有传输的数据进行加密，也防止DNS欺骗和IP。加固SSH服务，是指修改SSH服务中的一些配置，来提高系统的安全性。
+            操作说明
+            打开SSH配置文件/etc/ssh/sshd_config，查看文件中的字段值与安全加固设定的默认值是否一致。若不一致，查明原因，并修改。
+            重启SSH服务：
+            systemctl restart sshd.service
+    六、文件权限维护
+        检查文件权限
+          系统管理员必须保证系统配置文件，信息文件，系统设备文件和系统二进制文件不能被非系统管理员修改。所有文件都是在特定条件下作为通用可写被创建出来的。
+          操作说明
+          使用系统命令“ls -al [filename | path]”查看指定文件的权限。
+    七、内核参数维护
+        检查与修改内核参数
+        内核参数决定配置和应用特权的状态，管理员应定期查看系统中的内核参数的值是否有变更。内核提供用户可配置的系统控制，这一系统控制可微调至提高系统的安全性。
+        操作说明
+          通过系统命令“sysctl -a”列出当前系统中的所有内核参数。
+          将当前系统参数值与安全加固中的设置一一比较，观察其值有无更改。
+          若有更改，则打开内核参数配置文件/etc/sysctl.conf，查看有无参数在文件中配置。
+            若有，则确定参数值是否与表格中一致。
+            若不存在，则按配置文件中的格式添加对参数的配置。
+          执行系统命令“sysctl -p”使配置的参数值立即生效。
+    

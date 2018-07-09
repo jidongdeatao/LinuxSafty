@@ -1,0 +1,44 @@
+网络层安全
+网络层安全就是通过采用一系列安全措施，使得网络系统得到应有的安全保护，为在该网络平台上运行的业务系统提供应用的支持，
+包括一切访问网络资源或使用网络服务相关的安全保护。
+网络层安全技术
+包括网络拓朴安全设计、网络设备保护、网络隔离、网络边界保护（如防火墙）、网络安全检测（如IDS）、网络数据加密（如VPN）、网络安全扫描、网络安全管理和二层安全（如IP/MAC绑定和DHCP隔离）等多个方面。
+在网络安全方面着重关注服务器内部网络安全问题，主要通过防火墙技术来保证服务器内部网络安全。iptables内容请参见主机防火墙。
+
+网络层安全维护：
+1.防火墙规则配置
+防火墙需要配置一系列的规则，以决定什么样的数据包能够通过。防火墙基于iptables实现，系统管理员可以通过iptables配置防火墙规则。
+查看当前防火墙配置：iptables -S
+更改防火墙规则配置：防火墙规则配置请参考iptables相关帮助，此处不提供
+
+2.远程接入控制主要是SSH远程接入，因此主要描述SSH远程接入的维护内容。
+	1)设置账户密钥
+      SSH支持2种认证方式：基于口令的认证和基于密钥的认证。
+      基于口令的认证方式，只要知道账户和口令就可以登录远程主机，但是容易受到“中间人”攻击（仿冒目的服务器）。
+      基于密钥的认证需要生成公私密钥对，将公钥存放于服务器，登录服务器时使用密钥进行验证。与口令认证相比，密钥认证不需要在网络上传送口令，且可以防范“中间人”攻击。
+      设置账户密钥的步骤（客户端也为Linux系统）如下：
+            1.在服务器端，修改/etc/ssh/sshd_config配置文件如下字段的值：
+                RSAAuthentication yes
+                PubkeyAuthentication yes
+                AuthorizedKeysFile .ssh/authorized_keys
+                PasswordAuthentication no
+                ChallengeResponseAuthentication yes
+                StrictModes yes
+            2.在客户端使用ssh-keygen生成公私密钥对，生成文件存放于/root/.ssh/id_rsa，密钥口令为空
+            3.在客户端使用ssh-copy-id将公钥传递至远程服务器
+              （如果缺少ssh-copy-id命令请先安装ssh-copy-id工具，或者使用scp等将公钥拷贝至远程服务器）
+            4.在客户端使用密钥认证，登录远程服务器
+	2)远程连接管理
+     查看当前SSH服务连接
+        可以通过以下命令查看当前系统所有的SSH服务连接。
+        netstat -a | grep ".*ssh.*ESTABLISHED.*"
+     关闭异常SSH服务连接
+        使用以下命令关闭异常SSH服务连接。
+        iptables -I INPUT -s 192.168.224.1 -m state --state ESTABLISHED -j DROP其中192.168.224.1为异常客户端的IP。
+        如果异常情况为误报或异常已经被清除，则使用如下命令删除上述限制。
+        iptables -D INPUT -s 192.168.224.1 -m state --state ESTABLISHED -j DROP
+	3)远程接入日志审计
+      为保证系统安全，系统管理员需要每天检查远程接入日志，日志信息存放在/var/log/messages文件中。
+      查看SSH登录日志。命令示例如下：
+      cat /var/log/messages | grep ".*sshd.*for.*from.*"
+  
