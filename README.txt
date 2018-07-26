@@ -25,8 +25,8 @@ Linux安全管理技术（目录：ManagementTechnology）主要分为三个层�
     三、网络层安全
       网络层安全分为防火墙规则配置、远程接入控制两个模块；远程接入控制主要是SSH远程接入的安全维护
 
-Linux安全配置规则（目录：Linux-Safe-configuration）内有两个指导文档、一个文件配置权限列表与sudo安全配置规范(防止越权）：
+Linux安全配置规则（目录：Linux-Safe-configuration）内有两个指导文档、一个文件权限列表与sudo安全配置规范(防止越权）：
     Linux安全配置规范
     Linux安全应用指导规范
-
+    文件权限列表（Linux_File_Permission_List.txt）
     sudo安全配置规范
