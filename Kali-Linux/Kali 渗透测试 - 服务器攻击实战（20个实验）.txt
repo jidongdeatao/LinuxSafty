@@ -1,0 +1,20 @@
+
+
+
+
+20.攻击后清除痕迹并创建访问后门
+  基本流程；
+    引入 metasploitable2
+    搭建Kali虚拟环境，保持两个环境属于同一网段，同一网络配置
+    启动 postgresql : service postgresql start
+    sudo msfconsole
+    db_rebuild_cache
+    msf > nmap -sV -Pn -oX shiyanlou.xml 192.168..
+    db_import shiyanlou.xml
+    services 192.168..
+    seach 模块
+    use 模块路径
+    show options
+    set options/属性 
+    exploit 
+    whoami/info检测
