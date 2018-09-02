@@ -1,0 +1,55 @@
+
+
+
+安装完成后需要进行的配置：
+1、基本的网络命令
+ifconfig命令用于显示当前主机中状态为“激活”的网络接口信息。
+ifconfig -a命令用于显示当前主机中所有网络接口信息（包括未激活的网络接口）
+
+route命令：
+route命令用于显示当前Linux系统中的路由信息，从route命令的显示结果可以看到当前主机所在的子网和默认网关的地址
+
+netstat命令
+netstat -r 命令可以实现与“route"命令相同的功能，即显示Linux系统中的路由信息（路由表）。
+”netstat -au"显示udp传输协议的连接情况
+"netstat -at"显示tcp传输协议的连接状况
+
+网卡的启用和停用：
+#ifconfig up
+#ifconfig down
+
+配置动态获取IP地址：
+在大型网络中，客户端主机通常设置为从DHCP服务器自动获取IP地址、子网掩码等网络信息，因此可以大大简化网络设置，下面是如何配置DHCP客户端
+"/etc/network/"目录下的”interfaces"文件是kali linux中最重要的网络配置文件之一，该文件用于描述主机中所有的网络接口的信息，不论Linux主机中作为DHCP客户端还是配置使用静态IP地址，都需要对该文件进行修改。
+以下是作为DHCP客户端的“interfaces”文件的配置内容，其中“iface eth0 inet dhcp"设置网络接口eth0 通过DHCP获取网络地址。
+iface eth0 inet dhcp             //用于设置网络接口eth0 通过dhcp协议获取网络配置
+
+重启网络服务：
+对”interfaces“文件进行更改后，需要重新启动Linux中的networking 服务
+# /etc/init.d/networking restart
+
+配置使用静态IP地址
+配置Kali Linux使用静态IP地址同样需要在”/etc/networking"目录下的“interfaces”文件中进行配置。静态IP地址的配置将使用“interfaces"文件中更多的配置项。
+如下所示是eth0配置为使用静态IP地址的”interfaces"文件的内容，配置文件中各配置项的功能如下所示：
+
+
+“interfaces”文件中还有很多其他的设置项，如需要了解更多的信息，可以使用man命令查询“interfaces”文件的手册页。
+ #man interfaces
+ 
+其中eth0指本机以太网卡一，类似的，eth1指本机的以太网卡2。一般一台电脑只有一个eth0。网卡的设备名/dev/eth0 和硬件的MAC 地址52:54:AB:DD:6F:61对应，MAC 地址是生产厂家定的，每个网卡拥有的唯一地址。
+ 
+linux下，用ifconfig后，能看到eth0,可能还会看到eth0：1。其中eth0：1是指eth0的分ip存储文件，分ip存储文件格式为ifcfg-eth0：X， X为任意正整数（包括0）
+具体作用是实现单网卡多ip，类似与windows的多ip。
+
+二、配置DNS 
+      Kali Linux的DNS服务器地址使用文件“/etc/resovl.conf”进行配置，用户可以通过“nameserver”配置项设置DNS服务器的 IP地址；“resolv.conf”文件中最多可以使用
+“nameserver”指定３个DNS服务器，按照先后的顺序，一旦前面的DNS服务器失效，系统将自动使用后面的DNS服务器。
+      对于“resolv.conf”文件设置“nameserver”的修改是即时生效的，即只要对“resolv.conf”文件的修改进行了保存，在系统下一次需要进行域名的解析时就会按照该文件中指定
+的DNS服务器IP地址进行域名的解析。
+在resolv.conf中的格式如下：
+domain
+nameserver 10.10.10.10
+nameserver 102.54.16.2
+三、重启网络
+      在之前的步骤完成后保存，然后在终端里边重启网络，命令如下：/etc/init.d/networking restart
+      完了之后打开浏览器就可以在校内网下载登录客户端上网了！
